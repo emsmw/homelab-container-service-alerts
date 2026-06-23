@@ -31,11 +31,11 @@ def save_current_state(state):
         print(f"Error saving state file: {e}")
 
 def main():
-    # CONNECT TO DOCKER DAEMON
     healthy_container_list = []
     bad_container_list = []
     current_state = {} 
-    
+
+    # CONNECT TO DOCKER DAEMON
     client = docker.from_env()
     all_containers = client.containers.list(all=True)
 
@@ -55,7 +55,7 @@ def main():
 
     if not is_cron:
         print("\n########################################")
-        print("             SCAN COMPLETE              ")
+        print("            SCAN COMPLETE              ")
         print("########################################")
 
         col_width = 30
@@ -81,6 +81,15 @@ def discord_msg(healthy_container_list, bad_container_list, current_state):
     is_cron = "--cron" in sys.argv
     if not is_cron:
         return
+
+    #STATUSCAKE 5-MINUTE HEARTBEAT
+    current_minute = datetime.now(ZoneInfo("America/Toronto")).minute
+    if current_minute % 5 == 0:
+        try:
+            requests.get(config_secret.STATUSCAKE__PUSH_URL, timeout=5)
+            print("5-Minute StatusCake Heartbeat ping sent successfully!")
+        except Exception as e:
+            print(f"Failed to send StatusCake heartbeat: {e}")
 
     previous_state = load_previous_state()
     timestamp = datetime.now(ZoneInfo("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S %Z")
@@ -116,8 +125,9 @@ def discord_msg(healthy_container_list, bad_container_list, current_state):
             payload_content += f"🌱 `{container}` has recovered successfully.\n"
 
     if not payload_content:
+        print("No changes detected. All containers healthy.")
         return
-
+    
     try:
         response = requests.post(WEBHOOK_URL, json={"content": payload_content})
         if response.status_code == 204:
@@ -126,7 +136,6 @@ def discord_msg(healthy_container_list, bad_container_list, current_state):
             print(f"Failed to send alert. Status code: {response.status_code}")
     except Exception as e:
         print(f"Error sending webhook payload: {e}")
-
 
 if __name__ == "__main__":
     healthy_list, bad_list, current_state_map = main()
