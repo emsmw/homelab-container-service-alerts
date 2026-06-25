@@ -13,6 +13,7 @@ init(autoreset=True)
 
 WEBHOOK_URL = config_secret.DISCORD_WEBHOOK
 STATE_FILE = os.path.join(os.path.dirname(__file__), ".container_state.json")
+TIMESTAMP = datetime.now(ZoneInfo("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S %Z")
 
 def load_previous_state():
     if os.path.exists(STATE_FILE):
@@ -72,12 +73,12 @@ def main():
         total_containers = len(healthy_container_list) + len(bad_container_list)
         print(f"Summary: {len(healthy_container_list)}/{total_containers} containers running")
 
-        timestamp = datetime.now(ZoneInfo("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S %Z")
-        print(f"Scan time: {timestamp}")
+        print(f"Scan time: {TIMESTAMP}")
 
     return healthy_container_list, bad_container_list, current_state
 
 def discord_msg(healthy_container_list, bad_container_list, current_state):
+    #Only send discord message with cron jobs
     is_cron = "--cron" in sys.argv
     if not is_cron:
         return
@@ -92,7 +93,6 @@ def discord_msg(healthy_container_list, bad_container_list, current_state):
             print(f"Failed to send StatusCake heartbeat: {e}")
 
     previous_state = load_previous_state()
-    timestamp = datetime.now(ZoneInfo("America/Toronto")).strftime("%Y-%m-%d %H:%M:%S %Z")
     
     newly_failed = []
     newly_recovered = []
@@ -114,13 +114,13 @@ def discord_msg(healthy_container_list, bad_container_list, current_state):
 
     payload_content = ""
     if newly_failed:
-        payload_content += f"🚨 **ALERT** `{timestamp}`\nThe following containers have down on minos:\n"
+        payload_content += f"🚨 **ALERT** `{TIMESTAMP}`\nThe following containers have down on minos:\n"
         for container in newly_failed:
             payload_content += f"❌ `{container}` is down!\n"
             
     if newly_recovered:
         if payload_content: payload_content += "\n"
-        payload_content += f"✅ **RECOVERY** `{timestamp}`\nThe following services are back online:\n"
+        payload_content += f"✅ **RECOVERY** `{TIMESTAMP}`\nThe following services are back online:\n"
         for container in newly_recovered:
             payload_content += f"🌱 `{container}` has recovered successfully.\n"
 
