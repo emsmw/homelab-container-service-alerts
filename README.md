@@ -45,14 +45,22 @@ Ping StatusCake heartbeat (every 5 min)
 ```
 ## Discord Alerts
 
-> _Screenshot of Discord alert when container goes down_
+> _Screenshot of Discord alert when container goes down notification_
 
+![Discord Alert Notification](alert.png)
 > _Screenshot of Discord recovery notification_
 
+![Discord Alert Notification](recovery.png)
 
-## StatusCake Integration
+## StatusCake Discord Alerts
 
-> _Screenshot of StatusCake uptime dashboard_
+> _Screenshot of StatusCake Discord server down notification_
+
+![Discord Alert Notification](server_down.png)
+
+> _Screenshot of StatusCake Discord server back up notification_
+
+![Discord Alert Notification](server_up.png)
 
 
 The script pings a StatusCake push monitor URL every 5 minutes. If the ping stops arriving because the server is down, StatusCake send alert independently.
@@ -95,7 +103,6 @@ pip3 install -r requirements.txt
 ### 3. Configure credentials
 
 ```bash
-cp config_secret.example.py config_secret.py
 nano config_secret.py
 ```
 
@@ -116,7 +123,7 @@ You should see a formatted table of your container statuses in the terminal.
 
 ### 5. Set up automated monitoring
 
-**Option B — systemd service:**
+**systemd service:**
 
 Create `/etc/systemd/system/minos-container-monitoring.timer`:
 
